@@ -1,5 +1,6 @@
 
 import "./Hero.css";
+import DiwaliCountdown from "./DiwaliCountdown";
 
 function Hero() {
   return (
@@ -151,9 +152,19 @@ function Hero() {
           </a>
 
           <a href="/diya" className="hero-secondary-btn">
-            Light  Diya 🪔
+            Light Diya 🪔
+          </a>
+
+          <a href="/lantern" className="hero-secondary-btn">
+            Sky Lanterns 🏮
+          </a>
+
+          <a href="/eco" className="hero-secondary-btn">
+            Eco &amp; Safety 🌿
           </a>
         </div>
+
+        <DiwaliCountdown />
       </div>
     </section>
   );

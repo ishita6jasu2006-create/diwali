@@ -770,10 +770,18 @@ button {
   color: #fff;
 }
 
+/* ACTION BUTTONS ROW */
+
+.greeting-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
 .share-btn {
   width: 100%;
-  margin-top: 28px;
-  padding: 15px;
+  padding: 14px;
   border: none;
   border-radius: 30px;
   background: linear-gradient(120deg, #EAC77F, #B88742);
@@ -781,11 +789,40 @@ button {
   font-weight: 600;
   font-size: 13px;
   transition: 0.3s;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
 }
 
 .share-btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px #DAB57633;
+}
+
+.download-btn {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid rgba(232, 189, 115, 0.4);
+  border-radius: 30px;
+  background: transparent;
+  color: #E8BD73;
+  font-weight: 600;
+  font-size: 13px;
+  transition: 0.3s;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+
+.download-btn:hover {
+  background: rgba(232, 189, 115, 0.1);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(232, 189, 115, 0.12);
+}
+
+.download-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* PREVIEW */
@@ -803,15 +840,15 @@ button {
 
 .greeting-card {
   position: relative;
-  min-height: 440px;
-  padding: 35px 25px;
+  min-height: 480px;
+  padding: 55px 28px 55px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   overflow: hidden;
   border: 1px solid var(--card-accent);
-  border-radius: 12px;
+  border-radius: 16px;
   background:
     radial-gradient(circle at center,
       color-mix(in srgb, var(--card-accent) 15%, transparent),
@@ -819,6 +856,7 @@ button {
     #101d3265;
   box-shadow: 0 15px 55px #0005;
   transition: 0.4s;
+  gap: 0;
 }
 
 .theme-gold {
@@ -836,74 +874,97 @@ button {
 .card-decoration {
   color: var(--card-accent);
   letter-spacing: 12px;
-  font-size: 22px;
+  font-size: 20px;
+  width: 100%;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .top-decoration {
   position: absolute;
-  top: 20px;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .bottom-decoration {
   position: absolute;
-  bottom: 20px;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .card-diya {
-  font-size: 65px;
-  margin-bottom: 15px;
+  font-size: 60px;
+  margin: 55px 0 10px;
   filter: drop-shadow(0 0 15px var(--card-accent));
   animation: flicker 1s infinite alternate;
+  flex-shrink: 0;
 }
 
 .card-small-title {
   color: var(--card-accent);
   font-size: 10px;
   letter-spacing: 4px;
+  margin-bottom: 10px;
 }
 
 .greeting-card h2 {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(35px, 4vw, 48px);
+  font-size: clamp(32px, 4vw, 44px);
   color: var(--card-accent);
-  margin: 15px 0;
+  margin: 6px 0 4px;
+  text-align: center;
 }
 
 .card-divider {
   color: var(--card-accent);
-  font-size: 24px;
-  margin: 5px 0 15px;
+  font-size: 20px;
+  margin: 4px 0 10px;
 }
 
 .greeting-card h3 {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 26px;
+  font-size: 24px;
   color: #fff;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   overflow-wrap: anywhere;
+  text-align: center;
+  max-width: 100%;
+  padding: 0 10px;
 }
 
 .card-message {
   color: #D3D8E1;
   font-size: 13px;
-  line-height: 1.9;
-  max-width: 350px;
+  line-height: 1.85;
+  max-width: 320px;
   overflow-wrap: anywhere;
+  text-align: center;
+  padding: 0 8px;
 }
 
 .card-signature {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 4px;
   color: #AEB5C4;
   font-size: 12px;
-  margin-top: 22px;
+  margin-top: 18px;
+  margin-bottom: 42px;
+}
+
+.card-sig-line {
+  color: #7a8299;
+  font-size: 11px;
 }
 
 .card-signature strong {
   color: var(--card-accent);
   font-family: 'Cormorant Garamond', serif;
-  font-size: 21px;
+  font-size: 22px;
+  line-height: 1;
 }
 
 .preview-hint {

@@ -1,0 +1,94 @@
+
+/* ================================
+   DIWALI COUNTDOWN  (Hero section)
+================================= */
+
+.countdown-wrapper {
+  margin-top: 42px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.countdown-eyebrow {
+  color: #f6c65b;
+  font-size: 11px;
+  letter-spacing: 5px;
+  font-weight: 700;
+}
+
+.countdown-grid {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.countdown-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 72px;
+  padding: 14px 10px 12px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 213, 90, 0.28);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 22px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,220,100,0.12);
+  transition: transform 0.3s;
+}
+
+.countdown-block:hover {
+  transform: translateY(-4px);
+}
+
+.countdown-number {
+  font-family: Georgia, serif;
+  font-size: clamp(32px, 5vw, 46px);
+  font-weight: 700;
+  color: #ffd15e;
+  line-height: 1;
+  letter-spacing: 1px;
+  text-shadow: 0 0 20px rgba(255, 198, 70, 0.55);
+}
+
+.countdown-label {
+  color: #c8a85a;
+  font-size: 9px;
+  letter-spacing: 3px;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.countdown-date {
+  color: #d9c09a;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+}
+
+.countdown-tz {
+  color: #f6c65b;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.countdown-arrived {
+  font-size: 20px;
+  color: #ffd15e;
+  font-family: Georgia, serif;
+  letter-spacing: 1px;
+  text-shadow: 0 0 25px rgba(255, 200, 70, 0.6);
+}
+
+@media (max-width: 480px) {
+  .countdown-block {
+    min-width: 60px;
+    padding: 11px 8px 9px;
+  }
+
+  .countdown-eyebrow {
+    letter-spacing: 3px;
+  }
+}

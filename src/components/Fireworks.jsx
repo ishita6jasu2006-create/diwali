@@ -1,7 +1,10 @@
 
 import { useEffect, useRef, useState } from "react";
+import launchTravelSound from "../assets/firework-launch-travel.mp3";
+import explosionSound from "../assets/firework-pop.mp3";
 import "./Fireworks.css";
 import "./fireworks-background.css";
+
 const COLORS = [
   "#FFD700",
   "#FF5E78",
@@ -12,11 +15,93 @@ const COLORS = [
   "#7CFFB2",
 ];
 
+function playSound(source, activeSounds) {
+  const audio = source.cloneNode();
+  const baseVolume = source.volume;
+  audio.preload = "auto";
+  activeSounds.set(audio, baseVolume);
+
+  const updateMix = () => {
+    const volumeScale = 1 / Math.sqrt(activeSounds.size);
+    for (const [sound, volume] of activeSounds) {
+      sound.volume = volume * volumeScale;
+    }
+  };
+
+  const cleanup = () => {
+    if (!activeSounds.has(audio)) return;
+
+    audio.removeEventListener("ended", cleanup);
+    audio.removeEventListener("error", handleError);
+    activeSounds.delete(audio);
+    audio.pause();
+    audio.removeAttribute("src");
+    audio.load();
+    updateMix();
+  };
+
+  const handleError = () => {
+    console.error("Unable to load firework sound.", audio.error);
+    cleanup();
+  };
+
+  audio.addEventListener("ended", cleanup, { once: true });
+  audio.addEventListener("error", handleError, { once: true });
+  updateMix();
+  audio.play().catch((error) => {
+    cleanup();
+    if (error.name !== "NotAllowedError") {
+      console.error("Unable to play firework sound.", error);
+    }
+  });
+}
+
 function Fireworks() {
   const canvasRef = useRef(null);
   const fireworksRef = useRef([]);
   const particlesRef = useRef([]);
-  const [autoLaunch, setAutoLaunch] = useState(true);
+  const soundEnabledRef = useRef(false);
+  const soundSourcesRef = useRef(null);
+  const activeSoundsRef = useRef(new Map());
+  const [autoLaunch, setAutoLaunch] = useState(false);
+
+  useEffect(() => {
+    const activeSounds = activeSoundsRef.current;
+    const launchAudio = new Audio(launchTravelSound);
+    const explosionAudio = new Audio(explosionSound);
+    launchAudio.preload = "auto";
+    explosionAudio.preload = "auto";
+    launchAudio.volume = 0.5;
+    explosionAudio.volume = 0.5;
+    launchAudio.load();
+    explosionAudio.load();
+    soundSourcesRef.current = { launchAudio, explosionAudio };
+
+    const unlockSounds = () => {
+      soundEnabledRef.current = true;
+    };
+    window.addEventListener("pointerdown", unlockSounds, true);
+    window.addEventListener("keydown", unlockSounds, true);
+
+    return () => {
+      soundEnabledRef.current = false;
+      window.removeEventListener("pointerdown", unlockSounds, true);
+      window.removeEventListener("keydown", unlockSounds, true);
+      for (const audio of activeSounds.keys()) {
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+      }
+      activeSounds.clear();
+      launchAudio.pause();
+      explosionAudio.pause();
+      launchAudio.removeAttribute("src");
+      explosionAudio.removeAttribute("src");
+      launchAudio.load();
+      explosionAudio.load();
+      soundSourcesRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -43,6 +128,10 @@ function Fireworks() {
       const targetY =
         y ?? canvas.clientHeight * (0.15 + Math.random() * 0.4);
 
+      if (soundEnabledRef.current && soundSourcesRef.current) {
+        playSound(soundSourcesRef.current.launchAudio, activeSoundsRef.current);
+      }
+
       fireworksRef.current.push({
         x: startX,
         y: canvas.clientHeight,
@@ -54,6 +143,10 @@ function Fireworks() {
     };
 
     const explode = (x, y, color) => {
+      if (soundEnabledRef.current && soundSourcesRef.current) {
+        playSound(soundSourcesRef.current.explosionAudio, activeSoundsRef.current);
+      }
+
       const count = 65 + Math.floor(Math.random() * 45);
 
       for (let i = 0; i < count; i++) {
@@ -162,20 +255,14 @@ function Fireworks() {
     };
   }, [autoLaunch]);
 
-  const handleCanvasClick = (event) => {
+  const handleCanvasPointerDown = (event) => {
     const rect = canvasRef.current.getBoundingClientRect();
-
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    canvasRef.current.launchFirework(x, y);
+    canvasRef.current.launchFirework(event.clientX - rect.left, event.clientY - rect.top);
   };
 
   return (
     <section className="fireworks-section">
       <div className="fireworks-heading">
-        <span className="fireworks-eyebrow">THE GRAND FINALE</span>
-
         <h1>
           Let the Sky <span>Shine</span>
         </h1>
@@ -190,16 +277,7 @@ function Fireworks() {
         <canvas
           ref={canvasRef}
           className="fireworks-canvas"
-          onClick={handleCanvasClick}
-          onTouchStart={(event) => {
-            const touch = event.touches[0];
-            const rect = canvasRef.current.getBoundingClientRect();
-
-            canvasRef.current.launchFirework(
-              touch.clientX - rect.left,
-              touch.clientY - rect.top
-            );
-          }}
+          onPointerDown={handleCanvasPointerDown}
         />
 
         <div className="fireworks-stage-caption">

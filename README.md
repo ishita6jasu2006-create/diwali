@@ -1,16 +1,63 @@
-# React + Vite
+# Aurora Diwali
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aurora Diwali is a festive, interactive website celebrating Diwali. Explore the festival through creative activities, lanterns, music, and a canvas-based fireworks display.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Home:** Diwali greeting and festival countdown.
+- **Light a Diya:** Interactive diya experience.
+- **Rangoli:** Create a rangoli design.
+- **Greetings:** Generate and share a Diwali wish.
+- **Fireworks:** Launch fireworks on the canvas or enjoy automatic fireworks. Launch and explosion sounds are enabled after your first interaction with the page.
+- **Eco & Safety:** Tips for celebrating responsibly.
+- **Sky Lanterns:** Write and release a virtual wish.
+- **Festive music:** Choose from three Diwali-themed audio options and play or pause them.
 
-## React Compiler
+## Getting started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Requirements
 
-## Expanding the ESLint configuration
+- Node.js
+- npm
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Install and run
+
+```bash
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite in your browser.
+
+## Available scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Vite development server. |
+| `npm run build` | Create a production build in `dist/`. |
+| `npm run preview` | Preview the production build locally. |
+| `npm run lint` | Run ESLint across the project. |
+
+## Routes
+
+| Path | Page |
+| --- | --- |
+| `/` | Home |
+| `/diya` | Light Diya |
+| `/rangoli` | Rangoli Creator |
+| `/greetings` | Greeting Generator |
+| `/celebration` | Fireworks |
+| `/eco` | Eco & Safety |
+| `/lantern` | Sky Lanterns |
+
+## Audio assets
+
+Audio files are stored in `src/assets/` and are bundled by Vite. Browser playback policies require a user interaction before sounds can play; interact with the page to enable the fireworks audio.
+
+## Built with
+
+- React
+- React Router
+- Vite
+- HTML Canvas
+

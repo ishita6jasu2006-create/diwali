@@ -1,0 +1,137 @@
+
+/* ================================
+   NAVBAR — extended & responsive
+================================= */
+
+/* Hide hamburger on desktop, show CTA */
+
+.hamburger {
+  display: none;
+}
+
+.nav-cta {
+  display: flex;
+}
+
+/* On medium screens hide some links or scroll */
+
+@media (max-width: 1100px) {
+  .nav-links {
+    gap: 18px;
+  }
+
+  .nav-links a {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Hide desktop links & show hamburger */
+  .nav-links {
+    display: none;
+  }
+
+  .nav-cta {
+    display: none;
+  }
+
+  .hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid rgba(232, 189, 115, 0.3);
+    border-radius: 8px;
+    padding: 7px;
+    cursor: pointer;
+    transition: 0.25s;
+  }
+
+  .hamburger:hover {
+    border-color: #E8BD73;
+  }
+
+  .hamburger span {
+    display: block;
+    height: 1.5px;
+    background: #E8BD73;
+    border-radius: 2px;
+    transition: 0.3s;
+    transform-origin: center;
+  }
+
+  .hamburger.is-open span:nth-child(1) {
+    transform: translateY(6.5px) rotate(45deg);
+  }
+
+  .hamburger.is-open span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  .hamburger.is-open span:nth-child(3) {
+    transform: translateY(-6.5px) rotate(-45deg);
+  }
+
+  /* Mobile Drawer */
+
+  .mobile-drawer {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: rgba(8, 15, 32, 0.97);
+    border-bottom: 1px solid rgba(232, 189, 115, 0.2);
+    backdrop-filter: blur(16px);
+    display: flex;
+    flex-direction: column;
+    padding: 12px 7%;
+    gap: 2px;
+    z-index: 100;
+    animation: drawerIn 0.2s ease;
+  }
+
+  @keyframes drawerIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .mobile-link {
+    padding: 13px 0;
+    color: #C2C5CF;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(232, 189, 115, 0.08);
+    transition: color 0.25s;
+    text-decoration: none;
+  }
+
+  .mobile-link:last-of-type {
+    border-bottom: none;
+  }
+
+  .mobile-link:hover,
+  .mobile-link.active {
+    color: #E8BD73;
+  }
+
+  .mobile-cta {
+    display: block;
+    margin: 14px 0 8px;
+    padding: 13px 22px;
+    text-align: center;
+    border: 1px solid #C99C58;
+    border-radius: 30px;
+    color: #E8BD73;
+    font-size: 13px;
+    text-decoration: none;
+    transition: 0.3s;
+  }
+
+  .mobile-cta:hover {
+    background: #D8AC6A;
+    color: #080F20;
+  }
+}

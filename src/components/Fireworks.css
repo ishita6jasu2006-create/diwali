@@ -110,6 +110,12 @@
   margin-top: 30px;
 }
 
+.fireworks-sound-error {
+  color: #ffb4a9;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
 @media (max-width: 600px) {
   .fireworks-section {
     padding: 45px 5% 30px;
