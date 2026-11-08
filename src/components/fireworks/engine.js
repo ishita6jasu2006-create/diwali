@@ -256,12 +256,24 @@ export class FireworksEngine {
     this.emitters.push(e);
   }
 
-  launch(kind, { x, y, pattern } = {}) {
+  launch(kind, { x, y, pattern, burstCount = 1 } = {}) {
     if (!this.w) return;
     const px = x ?? this._pickX();
-    if (kind === "rocket" || kind === "skyshot") {
-      const shell = kind === "skyshot";
-      const target = y !== undefined ? Math.min(y, this.h * 0.72) : rand(this.h * (shell ? 0.12 : 0.18), this.h * (shell ? 0.34 : 0.42));
+    if (kind === "rocket" || kind === "skyshot" || kind === "shell") {
+      if (kind === "shell" && burstCount > 1) {
+        const count = Math.min(20, Math.max(1, Math.floor(burstCount)));
+        const spacing = count === 20 ? 0.46 : 0.52;
+        for (let i = 0; i < count; i++) {
+          const offset = (i - (count - 1) / 2) * Math.min(this.w * 0.018, 18);
+          const shellX = Math.max(this.w * 0.08, Math.min(this.w * 0.92, px + offset));
+          this.after(i * spacing, () => this.launch("shell", { x: shellX, y, pattern }));
+        }
+        return;
+      }
+      const shell = kind !== "rocket";
+      const target = y !== undefined
+        ? Math.min(y, this.h * (shell ? 0.26 : 0.72))
+        : rand(this.h * (shell ? 0.1 : 0.18), this.h * (shell ? 0.24 : 0.42));
       const pat = pattern && pattern !== "auto" ? pattern
         : shell ? pick(PATTERNS)
         : pick(["chrysanthemum", "chrysanthemum", "chrysanthemum", "peony", "peony", "peony", "willow", "willow", "palm", "ring", "pistil", "crossette", "crackling"]);
@@ -273,7 +285,7 @@ export class FireworksEngine {
   }
 
   // A staged ~14 second show finishing with a volley of sky shots
-  surprise(kinds = ["rocket", "rocket", "skyshot", "fountain", "spinner", "anar", "tubri", "flower", "crackle", "sparkler", "pop"]) {
+  surprise(kinds = ["rocket", "rocket", "skyshot", "shell", "fountain", "spinner", "anar", "tubri", "flower", "crackle", "sparkler", "pop"]) {
     let t = 0;
     const n = 11 + Math.floor(Math.random() * 4);
     for (let i = 0; i < n; i++) {

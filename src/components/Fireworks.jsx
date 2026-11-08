@@ -8,25 +8,18 @@ import "./Fireworks.css";
 
 const CRACKERS = [
   {
-    id: "fuljhari",
-    name: "Fuljhari",
-    kind: "sparkler",
-    icon: "✨",
-    description: "A hand-held sparkler sprays a steady cascade of warm golden sparks.",
+    id: "sky-shot",
+    name: "Aerial Bomb / Sky Shot",
+    kind: "skyshot",
+    icon: "🎇",
+    description: "A soaring sky shot bursts high above the rooftops in a grand colorful bloom.",
   },
   {
-    id: "rongmosal",
-    name: "Rongmosal",
-    kind: "fountain",
+    id: "diwali-shell",
+    name: "Aerial Shell",
+    kind: "shell",
     icon: "🎆",
-    description: "A lively color fountain rises in changing shades of pink, blue and gold.",
-  },
-  {
-    id: "tubri",
-    name: "Tubri",
-    kind: "tubri",
-    icon: "🌟",
-    description: "An energetic ground fountain erupts in irregular golden and silver jets.",
+    description: "A high-flying display shell blooms into a huge floral, multicolor, or ring-shaped burst.",
   },
   {
     id: "charki",
@@ -34,20 +27,6 @@ const CRACKERS = [
     kind: "spinner",
     icon: "🌀",
     description: "A fast-spinning ground wheel sends colorful sparks circling outward.",
-  },
-  {
-    id: "rocket",
-    name: "Rocket",
-    kind: "rocket",
-    icon: "🚀",
-    description: "A bright rocket streaks skyward, then opens into a sparkling burst.",
-  },
-  {
-    id: "potka",
-    name: "Potka",
-    kind: "pop",
-    icon: "💥",
-    description: "A tiny virtual cracker makes one quick flash and a compact pop of light.",
   },
   {
     id: "tara-bati",
@@ -59,7 +38,7 @@ const CRACKERS = [
   {
     id: "anar",
     name: "Anar",
-    kind: "anar",
+    kind: "fountain",
     icon: "🌈",
     description: "A broad, brilliant fountain fans a shower of sparks into the night.",
   },
@@ -69,14 +48,7 @@ const CRACKERS = [
     kind: "flower",
     icon: "🌼",
     description: "Two symmetrical sprays bloom into a decorative shower of color.",
-  },
-  {
-    id: "sky-shot",
-    name: "Aerial Bomb / Sky Shot",
-    kind: "skyshot",
-    icon: "🎇",
-    description: "A soaring sky shot bursts high above the rooftops in a grand colorful bloom.",
-  },
+  }
 ];
 
 const PATTERN_LABELS = {
@@ -98,11 +70,12 @@ function Fireworks() {
   const [soundOn, setSoundOn] = useState(true);
   const [volume, setVolume] = useState(0.7);
   const [pattern, setPattern] = useState("auto");
+  const [shellBurstCount, setShellBurstCount] = useState(10);
   const [audioError, setAudioError] = useState("");
   const [rendererError, setRendererError] = useState("");
 
   const selected = CRACKERS.find((cracker) => cracker.id === selectedId);
-  const hasBurstPattern = selected.kind === "rocket" || selected.kind === "skyshot";
+  const hasBurstPattern = selected.kind === "rocket" || selected.kind === "skyshot" || selected.kind === "shell";
 
   useEffect(() => {
     const audio = new AudioManager({ launch: launchSound, pop: popSound });
@@ -153,6 +126,7 @@ function Fireworks() {
     engine.launch(selected.kind, {
       ...position,
       pattern: hasBurstPattern ? pattern : undefined,
+      burstCount: selected.kind === "shell" ? shellBurstCount : undefined,
     });
   };
 
@@ -278,6 +252,22 @@ function Fireworks() {
               aria-pressed={pattern === item}
             >
               {PATTERN_LABELS[item]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selected.kind === "shell" && (
+        <div className="cracker-patterns" role="group" aria-label="Choose aerial shell chain length">
+          <span className="cracker-patterns-label">CONTINUOUS BURSTS</span>
+          {[1, 10, 20].map((count) => (
+            <button
+              key={count}
+              className={`cracker-pattern ${shellBurstCount === count ? "is-selected" : ""}`}
+              onClick={() => setShellBurstCount(count)}
+              aria-pressed={shellBurstCount === count}
+            >
+              {count === 1 ? "Single" : `${count} shells`}
             </button>
           ))}
         </div>
