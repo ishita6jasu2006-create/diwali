@@ -379,13 +379,13 @@ const Lotus = () => (
               className={tool === "fill" ? "active" : ""}
               onClick={() => setTool("fill")}
             >
-              🪣 Fill Colour
+              Fill Colour
             </button>
             <button
               className={tool === "eraser" ? "active" : ""}
               onClick={() => setTool("eraser")}
             >
-              ◇ Eraser
+              Eraser
             </button>
           </div>
 

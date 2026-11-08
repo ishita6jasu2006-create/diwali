@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { to: "/rangoli",     label: "Rangoli" },
   { to: "/greetings",   label: "Greetings" },
   { to: "/celebration", label: "Fireworks" },
-  { to: "/eco",         label: "Eco" },
+  { to: "/eco",         label: "Safety" },
   { to: "/lantern",     label: "Lanterns" },
 ];
 

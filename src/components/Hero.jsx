@@ -160,7 +160,7 @@ function Hero() {
           </a>
 
           <a href="/eco" className="hero-secondary-btn">
-            Eco &amp; Safety 🌿
+            Animal Safety 🌿
           </a>
         </div>
 

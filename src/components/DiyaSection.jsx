@@ -1,16 +1,18 @@
 
-import React, { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./diya.css";
 
 const diyaNumbers = [1, 2, 3, 4, 5, 6];
 
-function DiyaLamp({ number, isLit, onClick }) {
+function DiyaLamp({ number, isLit, onRef }) {
   return (
     <button
+      ref={onRef}
+      type="button"
       className={`ad-lamp ${isLit ? "ad-lit" : ""}`}
-      onClick={onClick}
-      aria-label={`${isLit ? "Extinguish" : "Light"} diya ${number}`}
+      aria-label={`Diya ${number}, ${isLit ? "glowing" : "extinguished"}`}
       aria-pressed={isLit}
+      tabIndex={-1}
     >
       <span className="ad-light-glow" />
 
@@ -40,7 +42,7 @@ function DiyaLamp({ number, isLit, onClick }) {
       </span>
 
       <span className="ad-lamp-status">
-        {isLit ? "GLOWING" : "TAP TO LIGHT"}
+        {isLit ? "GLOWING" : "EXTINGUISHED"}
       </span>
     </button>
   );
@@ -48,23 +50,235 @@ function DiyaLamp({ number, isLit, onClick }) {
 
 export default function DiyaSection() {
   const [litDiyas, setLitDiyas] = useState([]);
+  const [isMatchLit, setIsMatchLit] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [matchPosition, setMatchPosition] = useState({ x: 0, y: 0 });
+  const [windActive, setWindActive] = useState(false);
+  const [message, setMessage] = useState(
+    "Drag a matchstick across the striker to begin."
+  );
 
-  const toggleDiya = (id) => {
-    setLitDiyas((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id]
-    );
-  };
+  const diyaRefs = useRef({});
+  const strikerRef = useRef(null);
 
-  const lightAll = () => setLitDiyas([...diyaNumbers]);
-  const extinguishAll = () => setLitDiyas([]);
+  const matchLitRef = useRef(false);
+  const pointerIdRef = useRef(null);
+  const previousPositionRef = useRef(null);
+  const burnTimerRef = useRef(null);
+  const windTimerRef = useRef(null);
 
   const count = litDiyas.length;
   const complete = count === diyaNumbers.length;
 
+  // Matchstick ignition and burning
+  const igniteMatch = () => {
+    if (matchLitRef.current) return;
+
+    matchLitRef.current = true;
+    setIsMatchLit(true);
+    setMessage("Your match is lit! Bring it close to a diya.");
+
+    burnTimerRef.current = setTimeout(() => {
+      matchLitRef.current = false;
+      setIsMatchLit(false);
+      setMessage("Your match burned out. Strike another one!");
+    }, 4500);
+  };
+
+  // Check whether the match head crosses the striker
+  const checkStrikerCollision = (x, y) => {
+    if (matchLitRef.current || !strikerRef.current) return;
+
+    const rect = strikerRef.current.getBoundingClientRect();
+    const headX = x;
+    const headY = y;
+
+    const inside =
+      headX >= rect.left &&
+      headX <= rect.right &&
+      headY >= rect.top &&
+      headY <= rect.bottom;
+
+    const previous = previousPositionRef.current;
+
+    if (inside && previous) {
+      const distance = Math.abs(x - previous.x);
+
+      // Require actual dragging across the striker
+      if (distance > 2) {
+        igniteMatch();
+      }
+    }
+
+    previousPositionRef.current = { x, y };
+  };
+
+  // Light a diya when the burning match is released over it
+  const lightDiyaAtPosition = (x, y) => {
+    if (!matchLitRef.current) return false;
+
+    for (const number of diyaNumbers) {
+      const diya = diyaRefs.current[number];
+      if (!diya) continue;
+
+      const rect = diya.getBoundingClientRect();
+
+      if (
+        x >= rect.left &&
+        x <= rect.right &&
+        y >= rect.top &&
+        y <= rect.bottom
+      ) {
+        setLitDiyas((current) =>
+          current.includes(number)
+            ? current
+            : [...current, number]
+        );
+
+        setMessage(`Diya ${number} is glowing. Beautiful! 🪔`);
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  // Start dragging a fresh matchstick
+  const handleMatchStart = (event) => {
+    if (isDragging) return;
+
+    event.preventDefault();
+
+    clearTimeout(burnTimerRef.current);
+
+    matchLitRef.current = false;
+    setIsMatchLit(false);
+
+    const rect = event.currentTarget.getBoundingClientRect();
+
+    setMatchPosition({
+      x: rect.left,
+      y: rect.top,
+    });
+
+    previousPositionRef.current = {
+      x: rect.left,
+      y: rect.top + rect.height / 2,
+    };
+
+    pointerIdRef.current = event.pointerId;
+    setIsDragging(true);
+  };
+
+  // Track the matchstick while dragging
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handlePointerMove = (event) => {
+      if (event.pointerId !== pointerIdRef.current) return;
+
+      event.preventDefault();
+
+      const x = event.clientX - 20;
+      const y = event.clientY - 8;
+
+      setMatchPosition({ x, y });
+      checkStrikerCollision(x, y);
+    };
+
+    const handlePointerUp = (event) => {
+      if (event.pointerId !== pointerIdRef.current) return;
+
+      if (matchLitRef.current) {
+        const success = lightDiyaAtPosition(
+          event.clientX,
+          event.clientY
+        );
+
+        if (!success) {
+          setMessage("Bring the burning match closer to a diya.");
+        }
+      } else {
+        setMessage("Strike the match against the box first.");
+      }
+
+      clearTimeout(burnTimerRef.current);
+      matchLitRef.current = false;
+      setIsMatchLit(false);
+
+      previousPositionRef.current = null;
+      pointerIdRef.current = null;
+      setIsDragging(false);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: false,
+    });
+
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+    };
+  }, [isDragging]);
+
+  // Occasional wind gusts
+  useEffect(() => {
+    const windInterval = setInterval(() => {
+      if (Math.random() > 0.55) return;
+
+      setWindActive(true);
+
+      // Occasionally extinguish one randomly selected diya
+      if (Math.random() < 0.4) {
+        setLitDiyas((current) => {
+          if (current.length === 0) return current;
+
+          const randomIndex = Math.floor(
+            Math.random() * current.length
+          );
+
+          const extinguished = current[randomIndex];
+
+          setMessage(
+            `A gust of wind extinguished diya ${extinguished}. Relight it!`
+          );
+
+          return current.filter((_, i) => i !== randomIndex);
+        });
+      }
+
+      clearTimeout(windTimerRef.current);
+
+      windTimerRef.current = setTimeout(() => {
+        setWindActive(false);
+      }, 2200);
+    }, 15000);
+
+    return () => {
+      clearInterval(windInterval);
+      clearTimeout(windTimerRef.current);
+    };
+  }, []);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      clearTimeout(burnTimerRef.current);
+      clearTimeout(windTimerRef.current);
+    };
+  }, []);
+
+  const extinguishAll = () => {
+    setLitDiyas([]);
+    setMessage("All diyas are extinguished. Start a new ceremony.");
+  };
+
   return (
-    <main className="ad-page">
+    <main className={`ad-page ${windActive ? "ad-windy" : ""}`}>
       <div className="ad-background-glow" />
       <div className="ad-grain" />
 
@@ -72,7 +286,9 @@ export default function DiyaSection() {
         <span className="ad-brand">
           <span>✦</span> AURORA DIWALI
         </span>
-        <span className="ad-header-right">THE FESTIVAL OF LIGHTS</span>
+        <span className="ad-header-right">
+          THE FESTIVAL OF LIGHTS
+        </span>
       </header>
 
       <section className="ad-intro">
@@ -113,7 +329,9 @@ export default function DiyaSection() {
                     key={number}
                     number={number}
                     isLit={litDiyas.includes(number)}
-                    onClick={() => toggleDiya(number)}
+                    onRef={(node) => {
+                      diyaRefs.current[number] = node;
+                    }}
                   />
                 ))}
               </div>
@@ -134,6 +352,66 @@ export default function DiyaSection() {
         </div>
       </section>
 
+      {/* Matchbox and matchstick */}
+      <section className="ad-match-station">
+        <p className="ad-console-label">YOUR LIGHTING TOOLS</p>
+
+        <div className="ad-match-area">
+          <div className="ad-matchbox">
+            <div className="ad-matchbox-cover">
+              <span>✦</span>
+              <strong>AURORA</strong>
+              <small>DIWALI MATCHES</small>
+              <span>🪔</span>
+            </div>
+
+            <div
+              className="ad-matchbox-striker"
+              ref={strikerRef}
+            >
+              <span>STRIKE HERE</span>
+            </div>
+          </div>
+
+          {!isDragging && (
+            <button
+              type="button"
+              className="ad-matchstick"
+              onPointerDown={handleMatchStart}
+              aria-label="Pick up a matchstick and drag it across the striker"
+            >
+              <span className="ad-match-head" />
+              <span className="ad-match-wood" />
+            </button>
+          )}
+
+          {isDragging && (
+            <div
+              className={`ad-matchstick ad-matchstick-floating ${
+                isMatchLit ? "ad-match-burning" : ""
+              }`}
+              style={{
+                left: matchPosition.x,
+                top: matchPosition.y,
+              }}
+            >
+              {isMatchLit && <span className="ad-match-flame" />}
+              <span className="ad-match-head" />
+              <span className="ad-match-wood" />
+            </div>
+          )}
+        </div>
+
+        <p className="ad-match-instruction">
+          {isDragging
+            ? isMatchLit
+              ? "🔥 Bring the burning match to a diya!"
+              : "Drag the match head across the striker strip."
+            : "Pick up a matchstick and drag it across the striker."}
+        </p>
+      </section>
+
+      {/* Progress */}
       <section className="ad-console">
         <div className="ad-console-info">
           <div>
@@ -149,8 +427,8 @@ export default function DiyaSection() {
             {complete
               ? "All flames are glowing"
               : count > 0
-              ? "Your light is spreading"
-              : "Waiting for your first spark"}
+                ? "Your light is spreading"
+                : "Waiting for your first spark"}
           </div>
         </div>
 
@@ -158,15 +436,11 @@ export default function DiyaSection() {
           <div style={{ width: `${(count / 6) * 100}%` }} />
         </div>
 
-        <div className="ad-actions">
-          <button
-            className="ad-primary-btn"
-            onClick={lightAll}
-            disabled={complete}
-          >
-            ✧ Light All Diyas
-          </button>
+        <p className="ad-match-message" aria-live="polite">
+          {message}
+        </p>
 
+        <div className="ad-actions">
           <button
             className="ad-secondary-btn"
             onClick={extinguishAll}
@@ -191,7 +465,7 @@ export default function DiyaSection() {
         </section>
       ) : (
         <p className="ad-bottom-note">
-          ✦ CLICK A DIYA TO IGNITE YOUR LITTLE WORLD ✦
+          ✦ EVERY FLAME BEGINS WITH A SINGLE SPARK ✦
         </p>
       )}
 

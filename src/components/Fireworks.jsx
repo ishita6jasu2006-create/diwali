@@ -1,309 +1,313 @@
-
 import { useEffect, useRef, useState } from "react";
-import launchTravelSound from "../assets/firework-launch-travel.mp3";
-import explosionSound from "../assets/firework-pop.mp3";
+import launchSound from "../assets/firework-launch-travel.mp3";
+import popSound from "../assets/firework-pop.mp3";
+import { AudioManager } from "./fireworks/audioManager.js";
+import { FireworksEngine } from "./fireworks/engine.js";
+import { PATTERNS } from "./fireworks/particles.js";
 import "./Fireworks.css";
-import "./fireworks-background.css";
 
-const COLORS = [
-  "#FFD700",
-  "#FF5E78",
-  "#55D6FF",
-  "#C77DFF",
-  "#FF9F43",
-  "#FFFFFF",
-  "#7CFFB2",
+const CRACKERS = [
+  {
+    id: "fuljhari",
+    name: "Fuljhari",
+    kind: "sparkler",
+    icon: "✨",
+    description: "A hand-held sparkler sprays a steady cascade of warm golden sparks.",
+  },
+  {
+    id: "rongmosal",
+    name: "Rongmosal",
+    kind: "fountain",
+    icon: "🎆",
+    description: "A lively color fountain rises in changing shades of pink, blue and gold.",
+  },
+  {
+    id: "tubri",
+    name: "Tubri",
+    kind: "tubri",
+    icon: "🌟",
+    description: "An energetic ground fountain erupts in irregular golden and silver jets.",
+  },
+  {
+    id: "charki",
+    name: "Charki",
+    kind: "spinner",
+    icon: "🌀",
+    description: "A fast-spinning ground wheel sends colorful sparks circling outward.",
+  },
+  {
+    id: "rocket",
+    name: "Rocket",
+    kind: "rocket",
+    icon: "🚀",
+    description: "A bright rocket streaks skyward, then opens into a sparkling burst.",
+  },
+  {
+    id: "potka",
+    name: "Potka",
+    kind: "pop",
+    icon: "💥",
+    description: "A tiny virtual cracker makes one quick flash and a compact pop of light.",
+  },
+  {
+    id: "tara-bati",
+    name: "Tara Bati",
+    kind: "crackle",
+    icon: "🌠",
+    description: "Bright crackling golden stars scatter and twinkle before fading away.",
+  },
+  {
+    id: "anar",
+    name: "Anar",
+    kind: "anar",
+    icon: "🌈",
+    description: "A broad, brilliant fountain fans a shower of sparks into the night.",
+  },
+  {
+    id: "flower-pot",
+    name: "Flower Pot",
+    kind: "flower",
+    icon: "🌼",
+    description: "Two symmetrical sprays bloom into a decorative shower of color.",
+  },
+  {
+    id: "sky-shot",
+    name: "Aerial Bomb / Sky Shot",
+    kind: "skyshot",
+    icon: "🎇",
+    description: "A soaring sky shot bursts high above the rooftops in a grand colorful bloom.",
+  },
 ];
 
-function playSound(source, activeSounds) {
-  const audio = source.cloneNode();
-  const baseVolume = source.volume;
-  audio.preload = "auto";
-  activeSounds.set(audio, baseVolume);
-
-  const updateMix = () => {
-    const volumeScale = 1 / Math.sqrt(activeSounds.size);
-    for (const [sound, volume] of activeSounds) {
-      sound.volume = volume * volumeScale;
-    }
-  };
-
-  const cleanup = () => {
-    if (!activeSounds.has(audio)) return;
-
-    audio.removeEventListener("ended", cleanup);
-    audio.removeEventListener("error", handleError);
-    activeSounds.delete(audio);
-    audio.pause();
-    audio.removeAttribute("src");
-    audio.load();
-    updateMix();
-  };
-
-  const handleError = () => {
-    console.error("Unable to load firework sound.", audio.error);
-    cleanup();
-  };
-
-  audio.addEventListener("ended", cleanup, { once: true });
-  audio.addEventListener("error", handleError, { once: true });
-  updateMix();
-  audio.play().catch((error) => {
-    cleanup();
-    if (error.name !== "NotAllowedError") {
-      console.error("Unable to play firework sound.", error);
-    }
-  });
-}
+const PATTERN_LABELS = {
+  chrysanthemum: "Chrysanthemum",
+  peony: "Peony",
+  willow: "Willow",
+  pistil: "Pistil",
+  ring: "Ring",
+  palm: "Palm",
+  crossette: "Crossette",
+  crackling: "Crackling",
+};
 
 function Fireworks() {
   const canvasRef = useRef(null);
-  const fireworksRef = useRef([]);
-  const particlesRef = useRef([]);
-  const soundEnabledRef = useRef(false);
-  const soundSourcesRef = useRef(null);
-  const activeSoundsRef = useRef(new Map());
-  const [autoLaunch, setAutoLaunch] = useState(false);
+  const sceneRef = useRef(null);
+  const audioRef = useRef(null);
+  const [selectedId, setSelectedId] = useState(CRACKERS[0].id);
+  const [soundOn, setSoundOn] = useState(true);
+  const [volume, setVolume] = useState(0.7);
+  const [pattern, setPattern] = useState("auto");
+  const [audioError, setAudioError] = useState("");
+  const [rendererError, setRendererError] = useState("");
+
+  const selected = CRACKERS.find((cracker) => cracker.id === selectedId);
+  const hasBurstPattern = selected.kind === "rocket" || selected.kind === "skyshot";
 
   useEffect(() => {
-    const activeSounds = activeSoundsRef.current;
-    const launchAudio = new Audio(launchTravelSound);
-    const explosionAudio = new Audio(explosionSound);
-    launchAudio.preload = "auto";
-    explosionAudio.preload = "auto";
-    launchAudio.volume = 0.5;
-    explosionAudio.volume = 0.5;
-    launchAudio.load();
-    explosionAudio.load();
-    soundSourcesRef.current = { launchAudio, explosionAudio };
-
-    const unlockSounds = () => {
-      soundEnabledRef.current = true;
-    };
-    window.addEventListener("pointerdown", unlockSounds, true);
-    window.addEventListener("keydown", unlockSounds, true);
+    const audio = new AudioManager({ launch: launchSound, pop: popSound });
+    let engine;
+    let errorTimer;
+    try {
+      engine = new FireworksEngine(canvasRef.current, audio);
+      audio.preload();
+      audioRef.current = audio;
+      sceneRef.current = engine;
+      engine.start();
+    } catch (error) {
+      console.error("Unable to initialize the WebGL fireworks experience.", error);
+      engine?.dispose();
+      audio.dispose();
+      errorTimer = window.setTimeout(() => {
+        setRendererError("This device or browser could not start the WebGL light show. Try enabling hardware acceleration or using a WebGL-capable browser.");
+      }, 0);
+      return () => window.clearTimeout(errorTimer);
+    }
 
     return () => {
-      soundEnabledRef.current = false;
-      window.removeEventListener("pointerdown", unlockSounds, true);
-      window.removeEventListener("keydown", unlockSounds, true);
-      for (const audio of activeSounds.keys()) {
-        audio.pause();
-        audio.removeAttribute("src");
-        audio.load();
-      }
-      activeSounds.clear();
-      launchAudio.pause();
-      explosionAudio.pause();
-      launchAudio.removeAttribute("src");
-      explosionAudio.removeAttribute("src");
-      launchAudio.load();
-      explosionAudio.load();
-      soundSourcesRef.current = null;
+      sceneRef.current = null;
+      audioRef.current = null;
+      engine.dispose();
+      audio.dispose();
     };
   }, []);
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    let animationId;
-    let lastLaunch = 0;
-
-    const resizeCanvas = () => {
-      const rect = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
-    const launchFirework = (x, y) => {
-      const startX = x ?? Math.random() * canvas.clientWidth;
-      const targetY =
-        y ?? canvas.clientHeight * (0.15 + Math.random() * 0.4);
-
-      if (soundEnabledRef.current && soundSourcesRef.current) {
-        playSound(soundSourcesRef.current.launchAudio, activeSoundsRef.current);
+  const unlockAudio = async () => {
+    try {
+      const available = await audioRef.current?.unlock();
+      if (!available) {
+        setAudioError("Sound is unavailable in this browser, but the light show still works.");
+        return;
       }
-
-      fireworksRef.current.push({
-        x: startX,
-        y: canvas.clientHeight,
-        targetY,
-        speed: 5 + Math.random() * 3,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        trail: [],
-      });
-    };
-
-    const explode = (x, y, color) => {
-      if (soundEnabledRef.current && soundSourcesRef.current) {
-        playSound(soundSourcesRef.current.explosionAudio, activeSoundsRef.current);
-      }
-
-      const count = 65 + Math.floor(Math.random() * 45);
-
-      for (let i = 0; i < count; i++) {
-        const angle = (Math.PI * 2 * i) / count;
-        const speed = 1.5 + Math.random() * 4;
-
-        particlesRef.current.push({
-          x,
-          y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          alpha: 1,
-          decay: 0.009 + Math.random() * 0.012,
-          radius: 1 + Math.random() * 2,
-          color,
-          gravity: 0.035,
-        });
-      }
-    };
-
-    const animate = (time) => {
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-
-      ctx.clearRect(0, 0, width, height);
-
-      // Automatic fireworks
-      if (autoLaunch && time - lastLaunch > 850) {
-        launchFirework();
-        lastLaunch = time;
-      }
-
-      // Firework rockets
-      fireworksRef.current = fireworksRef.current.filter((rocket) => {
-        rocket.trail.push({ x: rocket.x, y: rocket.y });
-
-        if (rocket.trail.length > 7) rocket.trail.shift();
-
-        rocket.y -= rocket.speed;
-
-        ctx.beginPath();
-        ctx.moveTo(rocket.x, rocket.y + 8);
-        ctx.lineTo(rocket.x, rocket.y);
-        ctx.strokeStyle = rocket.color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        rocket.trail.forEach((point, index) => {
-          ctx.beginPath();
-          ctx.arc(point.x, point.y, 1.5, 0, Math.PI * 2);
-          ctx.fillStyle = rocket.color;
-          ctx.globalAlpha = index / rocket.trail.length;
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        });
-
-        if (rocket.y <= rocket.targetY) {
-          explode(rocket.x, rocket.y, rocket.color);
-          return false;
-        }
-
-        return true;
-      });
-
-      // Explosion particles
-      particlesRef.current = particlesRef.current.filter((particle) => {
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-        particle.vy += particle.gravity;
-        particle.vx *= 0.99;
-        particle.vy *= 0.99;
-        particle.alpha -= particle.decay;
-
-        if (particle.alpha <= 0) return false;
-
-        ctx.globalAlpha = particle.alpha;
-        ctx.beginPath();
-        ctx.arc(
-          particle.x,
-          particle.y,
-          particle.radius,
-          0,
-          Math.PI * 2
-        );
-        ctx.fillStyle = particle.color;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = particle.color;
-        ctx.fill();
-
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1;
-
-        return true;
-      });
-
-      animationId = requestAnimationFrame(animate);
-    };
-
-    animationId = requestAnimationFrame(animate);
-
-    canvas.launchFirework = launchFirework;
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", resizeCanvas);
-    };
-  }, [autoLaunch]);
-
-  const handleCanvasPointerDown = (event) => {
-    const rect = canvasRef.current.getBoundingClientRect();
-    canvasRef.current.launchFirework(event.clientX - rect.left, event.clientY - rect.top);
+      setAudioError("");
+    } catch (error) {
+      console.error("Unable to enable firecracker audio.", error);
+      setAudioError("Sound is unavailable in this browser, but the light show still works.");
+    }
   };
+
+  const launchSelected = (position) => {
+    const engine = sceneRef.current;
+    if (!engine) return;
+    if (soundOn) void unlockAudio();
+    engine.launch(selected.kind, {
+      ...position,
+      pattern: hasBurstPattern ? pattern : undefined,
+    });
+  };
+
+  const launchSurprise = () => {
+    const engine = sceneRef.current;
+    if (!engine) return;
+    const cracker = CRACKERS[Math.floor(Math.random() * CRACKERS.length)];
+    setSelectedId(cracker.id);
+    if (soundOn) void unlockAudio();
+    engine.surprise();
+  };
+
+  const toggleSound = () => {
+    const enabled = !soundOn;
+    setSoundOn(enabled);
+    audioRef.current?.setMuted(!enabled);
+  };
+
+  const handleStagePointerDown = (event) => {
+    if (event.target !== canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    void launchSelected({
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    });
+  };
+
+  const launchLabel = selected.kind === "sparkler"
+    ? "Light Fuljhari"
+    : hasBurstPattern
+      ? "Launch Selected"
+      : "Light Selected";
 
   return (
     <section className="fireworks-section">
-      <div className="fireworks-heading">
+      <header className="fireworks-heading">
+        <p className="fireworks-eyebrow">AURORA DIWALI · VIRTUAL CELEBRATION</p>
         <h1>
-          Let the Sky <span>Shine</span>
+          Light Up the <span>Night</span>
         </h1>
-
         <p>
-          Celebrate the magic of Diwali with a sky full of lights.
-          Click anywhere and create your own fireworks.
+          Pick a favorite, make a wish, and fill the Diwali sky with color.
+          All the festive sparkle, none of the smoke.
         </p>
-      </div>
+      </header>
 
-      <div className="fireworks-stage">
+      <div className="fireworks-stage" onPointerDown={handleStagePointerDown}>
         <canvas
           ref={canvasRef}
           className="fireworks-canvas"
-          onPointerDown={handleCanvasPointerDown}
+          aria-label="Interactive virtual Diwali night sky"
         />
+        <div className="fireworks-stage-caption" aria-hidden="true">
+          TAP THE SKY TO LIGHT YOUR SELECTION
+        </div>
+      </div>
+      {rendererError && <p className="fireworks-sound-error" role="status">{rendererError}</p>}
 
-        <div className="fireworks-stage-caption">
-          ✦ CLICK ANYWHERE TO LAUNCH ✦
+      <div className="cracker-controls" aria-label="Firecracker controls">
+        <div className="cracker-selected">
+          <div className="cracker-selected-icon" aria-hidden="true">{selected.icon}</div>
+          <div className="cracker-selected-copy">
+            <span>SELECTED FIRECRACKER</span>
+            <strong>{selected.name}</strong>
+            <p>{selected.description}</p>
+          </div>
+        </div>
+        <div className="cracker-control-buttons">
+          <button className="cracker-launch-button" onClick={() => launchSelected()}>
+            <span aria-hidden="true">✦</span> {launchLabel}
+          </button>
+          <button className="cracker-utility-button" onClick={launchSurprise}>
+            Surprise Me
+          </button>
+          <button
+            className="cracker-utility-button"
+            onClick={() => sceneRef.current?.clear()}
+          >
+            Clear Sky
+          </button>
+          <button
+            className="cracker-sound-button"
+            onClick={toggleSound}
+            aria-pressed={!soundOn}
+            aria-label={soundOn ? "Mute sounds" : "Unmute sounds"}
+          >
+            {soundOn ? "♫ Sound On" : "♪ Sound Off"}
+          </button>
+          <label className="cracker-volume">
+            <span>Volume</span>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={volume}
+              onChange={(event) => {
+                const nextVolume = Number(event.target.value);
+                setVolume(nextVolume);
+                audioRef.current?.setVolume(nextVolume);
+              }}
+              aria-label="Firecracker sound volume"
+            />
+          </label>
         </div>
       </div>
 
-      <div className="fireworks-controls">
-        <button
-          className="fireworks-button"
-          onClick={() => setAutoLaunch((previous) => !previous)}
-        >
-          {autoLaunch ? "Ⅱ Pause Auto Fireworks" : "▶ Start Auto Fireworks"}
-        </button>
+      {hasBurstPattern && (
+        <div className="cracker-patterns" role="group" aria-label="Choose a burst pattern">
+          <span className="cracker-patterns-label">BURST STYLE</span>
+          <button
+            className={`cracker-pattern ${pattern === "auto" ? "is-selected" : ""}`}
+            onClick={() => setPattern("auto")}
+            aria-pressed={pattern === "auto"}
+          >
+            Surprise
+          </button>
+          {PATTERNS.map((item) => (
+            <button
+              key={item}
+              className={`cracker-pattern ${pattern === item ? "is-selected" : ""}`}
+              onClick={() => setPattern(item)}
+              aria-pressed={pattern === item}
+            >
+              {PATTERN_LABELS[item]}
+            </button>
+          ))}
+        </div>
+      )}
 
-        <button
-          className="fireworks-button secondary"
-          onClick={() => canvasRef.current.launchFirework()}
-        >
-          ✨ Launch Firework
-        </button>
+      {audioError && <p className="fireworks-sound-error" role="status">{audioError}</p>}
+
+      <div className="cracker-picker-heading">
+        <div>
+          <span>THE FESTIVE LINE-UP</span>
+          <h2>Choose your sparkle</h2>
+        </div>
+        <p>Each one brings its own little bit of magic.</p>
       </div>
 
-      <p className="fireworks-footer">
-        Made with light, love & a little Diwali magic.
-      </p>
+      <div className="cracker-picker" role="group" aria-label="Choose a virtual firecracker">
+        {CRACKERS.map((cracker) => (
+          <button
+            key={cracker.id}
+            className={`cracker-option ${selectedId === cracker.id ? "is-selected" : ""}`}
+            onClick={() => setSelectedId(cracker.id)}
+            aria-pressed={selectedId === cracker.id}
+            title={cracker.description}
+          >
+            <span className="cracker-option-icon" aria-hidden="true">{cracker.icon}</span>
+            <span className="cracker-option-name">{cracker.name}</span>
+            {selectedId === cracker.id && <span className="cracker-option-check" aria-hidden="true">✦</span>}
+          </button>
+        ))}
+      </div>
     </section>
   );
 }

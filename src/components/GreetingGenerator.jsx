@@ -1,6 +1,8 @@
 
 import { useState } from "react";
 
+const GREETING_GENERATOR_URL = "https://main.d3n6wbvih1m9y9.amplifyapp.com/greetings";
+
 function GreetingGenerator() {
   const [sender,   setSender]   = useState("");
   const [receiver, setReceiver] = useState("");
@@ -20,7 +22,7 @@ function GreetingGenerator() {
 
   /* ---- WhatsApp share ---- */
   const shareGreeting = () => {
-    const text = `🪔 Happy Diwali ${receiver || "Dear Friend"}! 🪔\n\n${message}\n\nWith love,\n${sender || "Your Friend"}\n\n✨ Created with Aurora Diwali`;
+    const text = `🪔 Happy Diwali ${receiver || "Dear Friend"}! 🪔\n\n${message}\n\nWith love,\n${sender || "Your Friend"}\n\n✨ Created with Aurora Diwali\nCreate yours at: ${GREETING_GENERATOR_URL}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
   };
 
@@ -114,6 +116,13 @@ function GreetingGenerator() {
       ctx.font = "bold 20px serif";
       ctx.fillStyle = acc;
       ctx.fillText("✦  ✧  ✦", W / 2, H - 40);
+
+      /* Create your own greeting */
+      ctx.font = "10px Arial, sans-serif";
+      ctx.fillStyle = "#aeb5c4";
+      ctx.fillText("Create yours at:", W / 2, H - 82);
+      ctx.fillStyle = acc;
+      ctx.fillText(GREETING_GENERATOR_URL, W / 2, H - 64);
 
       /* Branding */
       ctx.font = "10px Arial, sans-serif";
@@ -259,6 +268,13 @@ function GreetingGenerator() {
             <div className="card-decoration bottom-decoration">
               ✦ ✧ ✦
             </div>
+
+            <p className="card-create-yours">
+              Create yours at:<br />
+              <a href={GREETING_GENERATOR_URL} target="_blank" rel="noreferrer">
+                {GREETING_GENERATOR_URL}
+              </a>
+            </p>
 
           </div>
 
