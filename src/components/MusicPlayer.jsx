@@ -5,6 +5,7 @@ import "./MusicPlayer.css";
 
 function MusicPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const [audioError, setAudioError] = useState("");
   const audioRef = useRef(null);
 
@@ -42,11 +43,24 @@ function MusicPlayer() {
       setAudioError("");
       await audio.play();
       setIsPlaying(true);
-    } catch (error) {
+    } catch {
       setAudioError("Click play to start the music.");
       setIsPlaying(false);
     }
   };
+
+  if (isHidden) {
+    return (
+      <button
+        type="button"
+        className="music-player__show"
+        onClick={() => setIsHidden(false)}
+        aria-label="Show festive music player"
+      >
+        ♫ <span>Music</span>
+      </button>
+    );
+  }
 
   return (
     <aside
@@ -68,6 +82,15 @@ function MusicPlayer() {
         <span className="music-player__equalizer" aria-hidden="true">
           <i /><i /><i />
         </span>
+        <button
+          type="button"
+          className="music-player__hide"
+          onClick={() => setIsHidden(true)}
+          aria-label="Hide festive music player"
+          title="Hide music player"
+        >
+          ×
+        </button>
       </div>
 
       <div className="music-player__bottom">

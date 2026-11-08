@@ -1,10 +1,11 @@
 
 import "./Hero.css";
 import DiwaliCountdown from "./DiwaliCountdown";
+import { Link } from "react-router-dom";
 
 function Hero() {
   return (
-    <section className="hero">
+    <section className="home-hero">
       <div className="hero-decorations">
         <div className="marigold-string string-one">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -31,42 +32,6 @@ function Hero() {
         </div>
       </div>
 
-      <div className="hero-lantern lantern-one">
-        <div className="lantern-string" />
-        <div className="lantern-top" />
-        <div className="lantern-body pink">
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="lantern-fringe" />
-      </div>
-
-      <div className="hero-lantern lantern-two">
-        <div className="lantern-string" />
-        <div className="lantern-top" />
-        <div className="lantern-body violet">
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="lantern-fringe" />
-      </div>
-
-      <div className="hero-lantern lantern-three">
-        <div className="lantern-string" />
-        <div className="lantern-top" />
-        <div className="lantern-body pink">
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-        <div className="lantern-fringe" />
-      </div>
-                {/* Traditional Diwali Fanus */}
       <div className="hero-fanus">
         <div className="akash-fanus fanus-one">
           <div className="fanus-thread" />
@@ -94,30 +59,6 @@ function Hero() {
           <div className="fanus-tassel" />
         </div>
 
-        <div className="akash-fanus fanus-three">
-          <div className="fanus-thread" />
-          <div className="fanus-cap" />
-          <div className="fanus-shape">
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className="fanus-bottom" />
-          <div className="fanus-tassel" />
-        </div>
-        <div className="akash-fanus fanus-four">
-  <div className="fanus-thread" />
-  <div className="fanus-cap" />
-  <div className="fanus-shape">
-    <span />
-    <span />
-    <span />
-    <span />
-  </div>
-  <div className="fanus-bottom" />
-  <div className="fanus-tassel" />
-</div>
       </div>
       <div className="hero-sparkles">
         <span>✦</span>
@@ -128,8 +69,8 @@ function Hero() {
         <span>✳</span>
       </div>
 
-      <div className="hero-content">
-        <span className="hero-eyebrow">
+      <div className="home-hero__content">
+        <span className="home-hero__eyebrow">
           ✦ THE FESTIVAL OF LIGHTS ✦
         </span>
 
@@ -137,7 +78,7 @@ function Hero() {
           Happy <span>Diwali</span>
         </h1>
 
-        <div className="hero-subtitle">
+        <div className="home-hero__subtitle">
           F E S T I V A L &nbsp; O F &nbsp; L I G H T S
         </div>
 
@@ -146,22 +87,22 @@ function Hero() {
           and happiness. Create memories and spread joy.
         </p>
 
-        <div className="hero-buttons">
-          <a href="/greetings" className="hero-primary-btn">
+        <div className="home-hero__actions">
+          <Link to="/greetings" className="hero-primary-btn">
             Create Your Greeting ✨
-          </a>
+          </Link>
 
-          <a href="/diya" className="hero-secondary-btn">
+          <Link to="/diya" className="hero-secondary-btn">
             Light Diya 🪔
-          </a>
+          </Link>
 
-          <a href="/lantern" className="hero-secondary-btn">
+          <Link to="/lantern" className="hero-secondary-btn">
             Sky Lanterns 🏮
-          </a>
+          </Link>
 
-          <a href="/eco" className="hero-secondary-btn">
+          <Link to="/eco" className="hero-secondary-btn">
             Animal Safety 🌿
-          </a>
+          </Link>
         </div>
 
         <DiwaliCountdown />
