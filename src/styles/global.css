@@ -825,6 +825,14 @@ button {
   transform: none;
 }
 
+.greeting-share-status {
+  margin-top: 12px;
+  color: #d8c49b;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+}
+
 /* PREVIEW */
 
 .greeting-preview {

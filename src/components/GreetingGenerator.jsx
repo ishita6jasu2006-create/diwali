@@ -1,29 +1,52 @@
 
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 const GREETING_GENERATOR_URL = "https://main.d3n6wbvih1m9y9.amplifyapp.com/greetings";
+const DEFAULT_MESSAGE =
+  "May your life shine brighter than a thousand diyas. Wishing you happiness, prosperity and endless joy!";
+const THEMES = [
+  { id: "gold", name: "Royal Gold", accent: "#E8BD73", bg1: "#2a1a04", bg2: "#1a1030" },
+  { id: "purple", name: "Mystic Purple", accent: "#C4A0FF", bg1: "#1a0a2e", bg2: "#0e0820" },
+  { id: "rose", name: "Rose Gold", accent: "#E9A99C", bg1: "#2a0e18", bg2: "#120a1a" },
+];
 
 function GreetingGenerator() {
-  const [sender,   setSender]   = useState("");
-  const [receiver, setReceiver] = useState("");
-  const [message,  setMessage]  = useState(
-    "May your life shine brighter than a thousand diyas. Wishing you happiness, prosperity and endless joy!"
-  );
-  const [theme, setTheme]  = useState("gold");
+  const [searchParams] = useSearchParams();
+  const [sender, setSender] = useState(() => searchParams.get("sender")?.slice(0, 35) ?? "");
+  const [receiver, setReceiver] = useState(() => searchParams.get("receiver")?.slice(0, 35) ?? "");
+  const [message, setMessage] = useState(() => {
+    const sharedMessage = searchParams.get("message");
+    return sharedMessage === null ? DEFAULT_MESSAGE : sharedMessage.slice(0, 250);
+  });
+  const [theme, setTheme] = useState(() => {
+    const sharedTheme = searchParams.get("theme");
+    return THEMES.some(({ id }) => id === sharedTheme) ? sharedTheme : "gold";
+  });
   const [downloading, setDownloading] = useState(false);
+  const [shareStatus, setShareStatus] = useState("");
+  const currentTheme = THEMES.find(({ id }) => id === theme);
 
-  const themes = [
-    { id: "gold",   name: "Royal Gold",    accent: "#E8BD73", bg1: "#2a1a04", bg2: "#1a1030" },
-    { id: "purple", name: "Mystic Purple", accent: "#C4A0FF", bg1: "#1a0a2e", bg2: "#0e0820" },
-    { id: "rose",   name: "Rose Gold",     accent: "#E9A99C", bg1: "#2a0e18", bg2: "#120a1a" },
-  ];
-
-  const currentTheme = themes.find(t => t.id === theme);
+  const getGreetingShareUrl = () => {
+    const url = new URL(GREETING_GENERATOR_URL);
+    url.search = new URLSearchParams({ sender, receiver, message, theme }).toString();
+    return url.toString();
+  };
 
   /* ---- WhatsApp share ---- */
   const shareGreeting = () => {
-    const text = `🪔 Happy Diwali ${receiver || "Dear Friend"}! 🪔\n\n${message}\n\nWith love,\n${sender || "Your Friend"}\n\n✨ Created with Aurora Diwali\nCreate yours at: ${GREETING_GENERATOR_URL}`;
+    const text = `🪔 Happy Diwali ${receiver || "Dear Friend"}! 🪔\n\n${message}\n\nWith love,\n${sender || "Your Friend"}\n\n✨ Created with Aurora Diwali\nView this greeting: ${getGreetingShareUrl()}\nCreate yours at: ${GREETING_GENERATOR_URL}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
+  };
+
+  const copyGreetingLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getGreetingShareUrl());
+      setShareStatus("Greeting link copied. Anyone you share it with can view your greeting.");
+    } catch (error) {
+      console.error("Unable to copy the greeting share link.", error);
+      setShareStatus("Unable to copy the link. Check clipboard permissions and try again.");
+    }
   };
 
   /* ---- PNG download (Canvas API — no external library) ---- */
@@ -200,7 +223,7 @@ function GreetingGenerator() {
           <label>Choose Your Theme</label>
 
           <div className="theme-options">
-            {themes.map(item => (
+            {THEMES.map(item => (
               <button
                 key={item.id}
                 className={`theme-btn ${theme === item.id ? "selected" : ""}`}
@@ -215,6 +238,10 @@ function GreetingGenerator() {
 
           {/* Action buttons */}
           <div className="greeting-actions">
+            <button className="download-btn" onClick={copyGreetingLink}>
+              Copy Greeting Link
+            </button>
+
             <button className="share-btn" onClick={shareGreeting}>
               Share on WhatsApp ↗
             </button>
@@ -227,6 +254,7 @@ function GreetingGenerator() {
               {downloading ? "Generating…" : "⬇ Download Card"}
             </button>
           </div>
+          {shareStatus && <p className="greeting-share-status" role="status">{shareStatus}</p>}
 
         </div>
 
